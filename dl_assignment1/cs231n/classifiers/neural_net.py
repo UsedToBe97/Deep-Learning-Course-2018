@@ -82,8 +82,9 @@ class TwoLayerNet(object):
     z = np.dot(X, W1) + np.tile(b1, (N, 1)) # N * H
     h = np.maximum(z, 0) # N * H
     scores = np.dot(h, W2) + np.tile(b2, (N, 1)) # N * C
-    ex = np.exp(scores) # N * C
-    o = ex / ex.sum(axis=1, keepdims=True) # N * C
+    #print ex
+    #print ex.sum(axis=1, keepdims=True)
+    #print o
     
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -103,13 +104,12 @@ class TwoLayerNet(object):
     # regularization loss by 0.5                                                #
     #############################################################################
     pass
-
-    loss = 0.5 * reg * (np.sum(np.square(W1)) + np.sum(np.square(W2))) 
-    oo = np.log(o)
-    tmp = 0
+    ex = np.exp(scores) # N * C
+    o = ex / ex.sum(axis=1, keepdims=True) # N * C
+    loss = 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2)) 
     for i in range(N):
-      tmp -= oo[i][y[i]]
-    loss += tmp
+      #print np.log(o[i][y[i]])
+      loss -= np.log(o[i][y[i]]) / N
 
     #############################################################################
     #                              END OF YOUR CODE                             #
@@ -135,10 +135,10 @@ class TwoLayerNet(object):
         else: 
           pz[i][j] = 0
     Jz = np.multiply(Jh, pz)
-    grads['W1'] = np.dot(np.transpose(X), Jz) + reg * W1
-    grads['b1'] = np.sum(Jz)
-    grads['W2'] = np.dot(np.transpose(h), Jo)
-    grads['b2'] = np.sum(Jo)
+    grads['W1'] = np.dot(np.transpose(X), Jz) / N + reg * W1
+    grads['b1'] = np.mean(Jz, axis=0)
+    grads['W2'] = np.dot(np.transpose(h), Jo) / N + reg * W2
+    grads['b2'] = np.mean(Jo, axis=0)
 
 
     #############################################################################
@@ -170,6 +170,7 @@ class TwoLayerNet(object):
     """
     num_train = X.shape[0]
     iterations_per_epoch = max(num_train / batch_size, 1)
+    print "iterations_per_epoch is %d" % iterations_per_epoch
 
     # Use SGD to optimize the parameters in self.model
     loss_history = []
@@ -185,19 +186,16 @@ class TwoLayerNet(object):
       # them in X_batch and y_batch respectively.                             #
       #########################################################################
       pass
-      indices = list(range(num_train))
-      random.shuffle(indices)
-      for i in range(0, num_train, batch_size):
-          j = nd.array(indices[i: min(i + batch_size, num_train)])
-          X_batch, y_batch = X.take(j), y.take(j)
-
+      idx = np.random.choice(num_train, batch_size)
+      X_batch = X[idx, :]
+      y_batch = y[idx]
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
 
       # Compute loss and gradients using the current minibatch
-          loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
-          loss_history.append(loss)
+      loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
+      loss_history.append(loss)
 
       #########################################################################
       # TODO: Use the gradients in the grads dictionary to update the         #
@@ -205,17 +203,18 @@ class TwoLayerNet(object):
       # using stochastic gradient descent. You'll need to use the gradients   #
       # stored in the grads dictionary defined above.                         #
       #########################################################################
-          pass
-          self.params['W1'] -= learning_rate * grads['W1'] / batch_size
-          self.params['b1'] -= learning_rate * grads['b1'] / batch_size
-          self.params['W2'] -= learning_rate * grads['W2'] / batch_size
-          self.params['b2'] -= learning_rate * grads['b2'] / batch_size
+      pass
+      self.params['W1'] -= learning_rate * grads['W1']
+      self.params['b1'] -= learning_rate * grads['b1']
+      self.params['W2'] -= learning_rate * grads['W2']
+      self.params['b2'] -= learning_rate * grads['b2']
       #########################################################################
       #                             END OF YOUR CODE                          #
       #########################################################################
 
       if verbose and it % 100 == 0:
         print 'iteration %d / %d: loss %f' % (it, num_iters, loss)
+        print (self.predict(X_val) == y_val).mean()
 
       # Every epoch, check train and val accuracy and decay learning rate.
       if it % iterations_per_epoch == 0:
@@ -255,7 +254,7 @@ class TwoLayerNet(object):
     # TODO: Implement this function; it should be VERY simple!                #
     ###########################################################################
     pass
-    y_pred = self.loss(X)
+    y_pred = np.argmax(self.loss(X), axis=1)
     ###########################################################################
     #                              END OF YOUR CODE                           #
     ###########################################################################

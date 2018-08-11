@@ -30,6 +30,30 @@ def softmax_loss_naive(W, X, y, reg):
   # regularization!                                                           #
   #############################################################################
   pass
+  N, D = X.shape
+  D, C = W.shape
+  scores = X.dot(W)
+  ex = np.zeros((N, C))
+  o = ex
+  for i in range(N):
+    for j in range(C):
+      ex[i][j] = np.exp(scores[i][j])
+    tot = 0
+    for j in range(C):
+      tot += ex[i][j]
+    for j in range(C):
+      o[i][j] = ex[i][j] / tot
+  #ex = np.exp(scores) # N * C
+  #o = ex / ex.sum(axis=1, keepdims=True) # N * C
+  loss = reg * np.sum(W * W) * 0.5
+  for i in range(N):
+    #print np.log(o[i][y[i]])
+    loss -= np.log(o[i][y[i]]) / N
+
+  dW = o
+  for i in range(N):
+    dW[i][y[i]] -= 1.0
+  dW = np.dot(np.transpose(X), dW) / N + reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -54,6 +78,17 @@ def softmax_loss_vectorized(W, X, y, reg):
   # regularization!                                                           #
   #############################################################################
   pass
+  N, D = X.shape
+  D, C = W.shape
+  scores = X.dot(W)
+  ex = np.exp(scores) # N * C
+  o = ex / ex.sum(axis=1, keepdims=True) # N * C
+  loss = reg * np.sum(W * W) * 0.5
+  loss -= np.sum(np.log(o[np.arange(N), y])) / N
+
+  dW = o
+  dW[np.arange(N), y]-= 1.0
+  dW = np.dot(np.transpose(X), dW) / N + reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
