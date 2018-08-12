@@ -46,6 +46,10 @@ class TwoLayerNet(object):
     # and biases using the keys 'W2' and 'b2'.                                 #
     ############################################################################
     pass
+    self.params['W1'] = weight_scale * np.random.randn(input_dim, hidden_dim)
+    self.params['W2'] = weight_scale * np.random.randn(hidden_dim, num_classes)
+    self.params['b1'] = np.zeros(hidden_dim)
+    self.params['b2'] = np.zeros(num_classes)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -76,6 +80,11 @@ class TwoLayerNet(object):
     # class scores for X and storing them in the scores variable.              #
     ############################################################################
     pass
+    W1, W2 = self.params['W1'], self.params['W2']
+    b1, b2 = self.params['b1'], self.params['b2']
+    a, tmp = affine_forward(X, W1, b1)
+    h, tmp = relu_forward(a)
+    scores, tmp = affine_forward(h, W2, b2)
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -96,6 +105,16 @@ class TwoLayerNet(object):
     # of 0.5 to simplify the expression for the gradient.                      #
     ############################################################################
     pass
+    loss, ds = softmax_loss(scores, y)
+    loss += 0.5 * self.reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
+
+    dh, dW2, db2 = affine_backward(ds, (h, W2, b2))
+    da = relu_backward(dh, a)
+    tmp, dW1, db1 = affine_backward(da, (X, W1, b1))
+    grads = {}
+    grads['W1'] = dW1 + self.reg * W1
+    grads['W2'] = dW2 + self.reg * W2
+    grads['b1'], grads['b2'] = db1, db2
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################
@@ -162,6 +181,12 @@ class FullyConnectedNet(object):
     # parameters should be initialized to zero.                                #
     ############################################################################
     pass
+    pre = input_dim
+    Dims = hidden_dims + [num_classes]
+    for idx, d in enumerate(Dims):
+      self.params['W{}'.format(idx+1)] = weight_scale * np.random.randn(pre, d)
+      self.params['b{}'.format(idx+1)] = np.random.randn(d)
+
     ############################################################################
     #                             END OF YOUR CODE                             #
     ############################################################################

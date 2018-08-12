@@ -25,6 +25,10 @@ def affine_forward(x, w, b):
   # will need to reshape the input into rows.                                 #
   #############################################################################
   pass
+  N = x.shape[0]
+  D = np.prod(x.shape[1:])
+  z = x.reshape(N, D)
+  out = z.dot(w) + b
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -53,6 +57,12 @@ def affine_backward(dout, cache):
   # TODO: Implement the affine backward pass.                                 #
   #############################################################################
   pass
+  N = x.shape[0]
+  D = w.shape[0]
+  z = x.reshape(N, D)
+  dx = dout.dot(w.T).reshape(x.shape)
+  db = np.sum(dout, axis=0)
+  dw = z.T.dot(dout)
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -75,6 +85,8 @@ def relu_forward(x):
   # TODO: Implement the ReLU forward pass.                                    #
   #############################################################################
   pass
+  out = np.copy(x) # Be sure that out is a copy not a reference.
+  out[out < 0] = 0
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -98,6 +110,8 @@ def relu_backward(dout, cache):
   # TODO: Implement the ReLU backward pass.                                   #
   #############################################################################
   pass
+  dx = np.copy(dout)
+  dx[x < 0] = 0
   #############################################################################
   #                             END OF YOUR CODE                              #
   #############################################################################
@@ -166,6 +180,12 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # storing your result in the running_mean and running_var variables.        #
     #############################################################################
     pass
+    sample_mean = np.mean(x, axis=0)
+    sample_var = np.var(x, axis=0)
+    z = (x - sample_mean) / np.sqrt(sample_var + eps)
+    out = z * gamma + beta
+    running_mean = momentum * running_mean + (1 - momentum) * sample_mean
+    running_var = momentum * running_var + (1 - momentum) * sample_var
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
@@ -177,6 +197,8 @@ def batchnorm_forward(x, gamma, beta, bn_param):
     # the out variable.                                                         #
     #############################################################################
     pass
+    out = (out - running_mean) / np.sqrt(running_var + eps)
+    out = out * gamma + beta
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################
